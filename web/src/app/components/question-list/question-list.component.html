@@ -1,0 +1,75 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Generated UPSC Mains Questions</mat-card-title>
+    <mat-card-subtitle>{{ questions.length }} questions generated</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <mat-accordion class="questions-accordion">
+      <mat-expansion-panel 
+        *ngFor="let question of questions; let i = index"
+        [expanded]="expandedPanels[question.question]">
+        
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <div class="question-header">
+              <span class="question-number">Q{{ i + 1 }}</span>
+              <span class="question-type">{{ question.type }}</span>
+            </div>
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ question.theme }}
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="question-content">
+          <h4 class="question-text">{{ question.question }}</h4>
+          
+          <div class="keywords" *ngIf="question.keywords && question.keywords.length > 0">
+            <mat-chip-listbox>
+              <mat-chip *ngFor="let keyword of question.keywords" color="primary" variant="outlined">
+                {{ keyword }}
+              </mat-chip>
+            </mat-chip-listbox>
+          </div>
+
+          <div class="action-buttons">
+            <button 
+              mat-raised-button 
+              color="accent" 
+              (click)="generateAnswer(question.question, i)"
+              [disabled]="generatingAnswers[question.question]">
+              
+              <mat-spinner *ngIf="generatingAnswers[question.question]" diameter="20"></mat-spinner>
+              <mat-icon *ngIf="!generatingAnswers[question.question]">lightbulb</mat-icon>
+              
+              {{ generatingAnswers[question.question] ? 'Generating...' : 'Generate Answer' }}
+            </button>
+
+            <button 
+              mat-stroked-button 
+              color="primary"
+              (click)="copyToClipboard(question.question)">
+              <mat-icon>content_copy</mat-icon>
+              Copy Question
+            </button>
+          </div>
+
+          <div *ngIf="answers[question.question]" class="answer-section">
+            <div class="answer-header">
+              <h5>Model Answer</h5>
+              <button 
+                mat-icon-button 
+                (click)="copyToClipboard(answers[question.question])"
+                matTooltip="Copy answer">
+                <mat-icon>content_copy</mat-icon>
+              </button>
+            </div>
+            
+            <div class="answer-content" [innerHTML]="formatAnswer(answers[question.question])"></div>
+          </div>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </mat-card-content>
+</mat-card>
