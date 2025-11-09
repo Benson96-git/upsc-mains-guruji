@@ -1,1 +1,1 @@
-ALLOWED_KEYWORDS=['thehindu','indianexpress','timesofindia']
+ALLOWED_KEYWORDS=['thehindu','indianexpress','timesofindia','manoramaonline']
