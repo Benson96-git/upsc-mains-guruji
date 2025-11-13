@@ -4,9 +4,9 @@ from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_community.document_loaders import WebBaseLoader
-from schema.user_input import UserInputData
-from core.logger import logger
-from schema.model_output import QAResponse
+from app.schema.user_input import UserInputData
+from app.core.logger import logger
+from app.schema.model_output import QAResponse
 
 #load the environment variables
 load_dotenv()

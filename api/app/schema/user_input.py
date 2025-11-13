@@ -1,6 +1,6 @@
 from pydantic import BaseModel,Field,field_validator,AnyUrl
 from typing import Annotated
-from config.newspapers import ALLOWED_KEYWORDS
+from app.config.newspapers import ALLOWED_KEYWORDS
 
 # a pydantic model for validating the input url
 class UserInputData(BaseModel):
