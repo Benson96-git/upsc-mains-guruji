@@ -4,7 +4,8 @@ from schema.user_input import UserInputData
 from core.logger import logger
 from src.model import generate_questions
 from schema.model_output import QAResponse
-
+from db.solved_question import DunduDb
+from bson import json_util
 app=FastAPI()
 
 
@@ -22,18 +23,33 @@ def home():
 
 
 #get the result
-@app.post("/result",response_model=QAResponse)
-def get_questions(data:UserInputData):
-    logger.info("get_questions endpoint was called")
+@app.post("/result")#,response_model=QAResponse)
+async def get_questions(data:UserInputData):
+    db= DunduDb()
+
+    
     input_data={'input_url':data.input_url}
     logger.debug(f"Received payload: {input_data}")
     
+    db_output=db.check_db(data.input_url)
 
-    try:
-        output=generate_questions(input_data)
+    if db_output:
+        return(JSONResponse( status_code=200,content=db_output)   ) 
+    
+    else:
+        try:
+            output=generate_questions(input_data)
+            logger.info("get_questions endpoint was called")
+            output = output.dict()
+            # output = json.loads(output)
+            test=output.copy()
+            #insert the data to db
+            db.insert_to_db(output)
+            
+            del test["url"] 
 
-    except Exception as E:
-        return(JSONResponse(status_code=500,content=str(E)))
-
-    return(JSONResponse( status_code=200,content=output.dict()))
+        except Exception as E:
+            print(f"error:{E}")
+            return(JSONResponse(status_code=500,content=str(E)))
+        return (JSONResponse( status_code=200,content=test)) 
 
