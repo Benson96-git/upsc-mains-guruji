@@ -1,22 +1,12 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from langchain_openai import ChatOpenAI
-from dotenv import load_dotenv
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import PydanticOutputParser
-from langchain_community.document_loaders import WebBaseLoader
 from schema.user_input import UserInputData
 from core.logger import logger
+from src.model import generate_questions
 from schema.model_output import QAResponse
-
-
-load_dotenv()
-
-llm = ChatOpenAI()
-
-
+from db.solved_question import DunduDb
+from bson import json_util
 app=FastAPI()
-parser=PydanticOutputParser(pydantic_object=QAResponse)
 
 
 
@@ -30,28 +20,36 @@ def home():
     "3.Times of India"}))
 
 
-#human Readable
-@app.get("/sampleresult")
-def result():
-    return(JSONResponse( status_code=200,content=chain.invoke({'text':docs[0].page_content})))
+
 
 #get the result
-@app.post("/result",response_model=QAResponse)
-def get_questions(data:UserInputData):
-    logger.info("get_questions endpoint was called")
+@app.post("/result")#,response_model=QAResponse)
+async def get_questions(data:UserInputData):
+    db= DunduDb()
+
+    
     input_data={'input_url':data.input_url}
     logger.debug(f"Received payload: {input_data}")
     
+    db_output=db.check_db(data.input_url)
 
-    try:
-        loader = WebBaseLoader(str(data.input_url))
-        docs= loader.load()
-        prompt =PromptTemplate(template="Give 10 UPSC level questions and answers from the below Text \n""{text} Return ONLY valid JSON in this format: {format_instructions}",
-                      input_variables=['text'],partial_variables={"format_instructions": parser.get_format_instructions()})
-        chain= prompt | llm | parser
-        output=chain.invoke({'text':docs[0].page_content})
-    except Exception as E:
-        return(JSONResponse(status_code=500,content=str(E)))
+    if db_output:
+        return(JSONResponse( status_code=200,content=db_output)   ) 
+    
+    else:
+        try:
+            output=generate_questions(input_data)
+            logger.info("get_questions endpoint was called")
+            output = output.dict()
+            # output = json.loads(output)
+            test=output.copy()
+            #insert the data to db
+            db.insert_to_db(output)
+            
+            del test["url"] 
 
-    return(JSONResponse( status_code=200,content=output.dict()))
+        except Exception as E:
+            print(f"error:{E}")
+            return(JSONResponse(status_code=500,content=str(E)))
+        return (JSONResponse( status_code=200,content=test)) 
 
