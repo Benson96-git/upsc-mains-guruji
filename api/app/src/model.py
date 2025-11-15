@@ -9,7 +9,7 @@ from app.core.logger import logger
 from app.schema.model_output import QAResponse
 
 #load the environment variables
-load_dotenv()
+# load_dotenv()
 
 
 
