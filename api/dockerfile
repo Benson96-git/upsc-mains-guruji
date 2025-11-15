@@ -1,0 +1,29 @@
+# Base image
+FROM python:3.11-slim
+
+
+# Set working directory
+WORKDIR /app
+
+# Copy pyproject.toml (and optionally uv.lock) first to leverage caching
+COPY . .
+
+
+
+# Install uv package manager (if not already in base image)
+RUN python -m pip install --upgrade pip
+RUN python -m pip install uv
+
+# Install dependencies from pyproject.toml
+RUN uv sync
+
+
+
+# Expose port (FastAPI default)
+EXPOSE 8000
+
+
+# Run your app
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
